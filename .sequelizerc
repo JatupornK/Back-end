@@ -1,0 +1,15 @@
+const path = require('path');
+// import path from "path";
+
+
+module.exports = {
+  'config': path.resolve('src/config', 'database.js'), //ลองเขียนดูว่าทำไมconfigกับ model ใช้ path ไม่เหมือนกัน config ต้องไปสร้างไฟล์ config เพิ่มไว้ก่อน?
+  //********************************************************* */
+  'models-path': path.resolve('src', 'models'),
+};
+// const setting =  {
+//   config: path.resolve("src/config", "database.js"), //ลองเขียนดูว่าทำไมconfigกับ model ใช้ path ไม่เหมือนกัน config ต้องไปสร้างไฟล์ config เพิ่มไว้ก่อน?
+//   //********************************************************* */
+//   "models-path": path.resolve("src", "models"),
+// };
+// export default setting;
