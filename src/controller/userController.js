@@ -6,7 +6,7 @@ exports.createAddress = async (req, res, next) => {
     const oldAddress = await Address.findOne({
         where: {
             userId: req.user.id,
-            latest: true
+            latest: true,
         }
     })
     if(oldAddress) {
