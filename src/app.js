@@ -11,14 +11,15 @@ const error = require("./middlewares/error");
 const authRoute = require("./routes/authRoute");
 const userRoute = require("./routes/userRoute");
 const authenticateWithPassport = require("./middlewares/passportJwt");
+const productRoute = require("./routes/productRoute");
 // const db = require('./models')
-// db.sequelize.sync({force:true})
+// db.sequelize.sync({alter:true})
 
 const app = express();
 app.use(
   rateLimit({
     windowMs: 1000 * 60 * 15,
-    max: 100,
+    max: 1000,
     message: { message: "Toomany request, Please try again later" },
   })
 );
@@ -30,6 +31,7 @@ app.use(cors());
 
 app.use("/auth", authRoute);
 app.use("/users", authenticateWithPassport, userRoute);
+app.use("/products", productRoute);
 
 app.use(error);
 app.use(notFould);

@@ -11,15 +11,15 @@ exports.login = async (req, res, next) => {
     const value = validateLogin(req.body);
     const result = await User.findOne({
       where: {
-        username: value.username,
+        email: value.email
       },
     });
     if (!result) {
-      createError("username or password is incorrect", 401);
+      createError("email or password is invalid", 401);
     }
     const isCorrect = await bcrypt.compare(value.password, result.password);
     if (!isCorrect) {
-      createError("username or password is incorrect", 401);
+      createError("email or password is invalid", 401);
     }
     const payload = {
       id: result.id,
@@ -40,11 +40,11 @@ exports.createUser = async (req, res, next) => {
     const value = validateRegister(req.body);
     const user = await User.findOne({
       where: {
-        username: value.username,
+        email: value.email,
       },
     });
     if (user) {
-      createError("This username is already use", 401);
+      createError("This email is already use.", 401);
     }
     const hashedPassword = await bcrypt.hash(value.password, 10);
     value.password = hashedPassword;
@@ -55,11 +55,11 @@ exports.createUser = async (req, res, next) => {
     const membership = await Membership.create({ userId: result.id });
     if (!membership) {
       User.destroy({ where: { id: result.id } });
-      createError("membership fail to create", 401);
+      createError("membership fail to create.", 401);
     }
     res.status(201).json({
-      message: "register success login to continue.",
-      membership: membership.id,
+      message: "register success, please login to continue.",
+      // membership: membership.id,
     });
   } catch (err) {
     next(err);

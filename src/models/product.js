@@ -26,7 +26,6 @@ module.exports = (sequelize, DataTypes) => {
       },
       bestSeller: {
         type: DataTypes.BOOLEAN(),
-        allowNull: false,
         defaultValue: false,
       },
     },
