@@ -13,6 +13,9 @@ const extractFunction = async (payload, done) => {
       where: {
         id: payload.id,
       },
+      attributes: {
+        exclude: 'password'
+      }
     });
     if (!user) {
       done(createError("you are unauthorized", 401), false);

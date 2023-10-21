@@ -1,17 +1,18 @@
 const createError = require("../utills/createError");
-const { User, Membership } = require("../models");
+const { User, Membership, Cart, Size, Product } = require("../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const {
   validateRegister,
   validateLogin,
 } = require("../validators/authValidator");
+const { CART_STATUS_UNDONE } = require("../config/constant");
 exports.login = async (req, res, next) => {
   try {
     const value = validateLogin(req.body);
     const result = await User.findOne({
       where: {
-        email: value.email
+        email: value.email,
       },
     });
     if (!result) {
@@ -68,22 +69,29 @@ exports.createUser = async (req, res, next) => {
 
 exports.getUserData = async (req, res, next) => {
   try {
-    const user = await User.findOne({
+    res.status(201).json({ user: req.user });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getProductsInCart = async (req, res, next) => {
+  try {
+    const productsInCart = await Cart.findAll({
       where: {
-        id: req.user.id,
+        status: CART_STATUS_UNDONE,
+        userId: req.user.id,
       },
-      attributes: {
-        exclude: ["password"],
-      },
-      include: {
-        model: Membership,
-        attributes: { exclude: ["userId"] },
-      },
+      attributes: { exclude: ["status", "userId"] },
+      include: [
+        { model: Size, attributes: ["size"] },
+        { model: Product, attributes: ["name", "price"] },
+      ],
     });
-    if (!user) {
-      createError("User not found", 401);
+    if (!productsInCart) {
+      createError("Cannot fetch user's cart data", 401);
     }
-    res.status(201).json({ user });
+    res.status(201).json({ productsInCart });
   } catch (err) {
     next(err);
   }
