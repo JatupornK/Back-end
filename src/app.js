@@ -19,7 +19,7 @@ const app = express();
 app.use(
   rateLimit({
     windowMs: 1000 * 60 * 15,
-    max: 1000,
+    max: 10000,
     message: { message: "Toomany request, Please try again later" },
   })
 );

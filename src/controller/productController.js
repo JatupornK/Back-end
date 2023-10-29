@@ -3,29 +3,45 @@ const { ValidateProduct } = require("../validators/productValidator");
 const { Product, Type, Image, Size, ProductSize } = require("../models");
 const cloudinary = require("../utills/cloudinary");
 const fs = require("fs");
-const db = require("../models/index");
 exports.createProduct = async (req, res, next) => {
   try {
-    req.body.size = req.body.size.split(' ')
     // console.log(req.body.size)
     // console.log(req.body)
     // req.body.size = [14,15,16] // how to convert '[14,15,16]'ในpostman เป็น array
+    // req.body.size = req.body.size.split(" ");
     const value = ValidateProduct(req.body);
     let image = [];
     let imageMain = {};
     let imageSub = {};
-    const type = await Type.findOne({
-      where: {
-        type: req.body.type,
-      },
-    });
-    const size = await Size.findAll({
-      where: {
-        size: req.body.size,
-      },
-    });
+    // const type = await Type.findOne({
+    //   where: {
+    //     type: req.body.type,
+    //   },
+    // });
+    // const size = await Size.findAll({
+    //   where: {
+    //     size: req.body.size,
+    //   },
+    // });
+    if(!req.body.size) {
+      req.body.size='FREESIZE';
+    }
+    const [type, size] = await Promise.all([
+      Type.findOne({
+        where: {
+          type: req.body.type,
+        },
+      }),
+      Size.findAll({
+        where: {
+          size: req.body.size,
+        },
+      }),
+    ]);
     if (!type) {
-      createError("Type of product is wrong", 401);
+      createError("Type of product is invalid", 401);
+    } else if (size.length<1) {
+      createError("Size number is invalid", 401);
     }
     value.typeId = type.id;
     const product = await Product.create(value);
@@ -46,18 +62,17 @@ exports.createProduct = async (req, res, next) => {
       imageSub.priorityId = 2;
       imageSub.productId = product.id;
     }
-    if(imageMain) {
+    if (imageMain) {
       image.push(imageMain);
-      if(imageSub) image.push(imageSub)
+      if (imageSub) image.push(imageSub);
     }
     let sizes = [];
     for (let item of size) {
       sizes.push({
-        sizeId: JSON.stringify(item.id),
-        productId: JSON.stringify(product.id),
+        sizeId: item.id,
+        productId: product.id,
       });
     }
-    console.log(sizes)
     for (let i = 0; i < sizes.length; i++) {
       const productSize = await ProductSize.create(sizes[i]);
       if (!productSize) {

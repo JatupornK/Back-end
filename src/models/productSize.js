@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: {
         name: "sizeId",
         allowNull: false,
+        defaultValue: 7
       },
       onDelete: "restrict",
     }),

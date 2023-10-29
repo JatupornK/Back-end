@@ -22,10 +22,10 @@ const productSchema = Joi.object({
     "string.base" : "Type must be a string type",
     "string.empty" : "Type cann't be a blank space"
   }),
-  size: Joi.array().items(Joi.number()).required().messages({
-    "any.required": "Size is required",
-    "array.base": "Size must be an array type"
-  })
+  // size: Joi.array().items(Joi.number()).required().messages({
+  //   "any.required": "Size is required",
+  //   "array.base": "Size must be an array type"
+  // })
 });
 
 exports.ValidateProduct = validate(productSchema);
