@@ -6,9 +6,9 @@ const router = express.Router();
 router.post(
   "/admin",
   uploadImage.fields([
-    { name: "productImagesMain", maxCount: 1 },
+    { name: "productImageMain", maxCount: 1 },
     { name: "productImageSub", maxCount: 1 },
-    { name: "productImageNormal", maxCount: 4 },
+    { name: "productImagesNormal", maxCount: 4 },
   ]),
   productController.createProduct
 );

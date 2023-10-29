@@ -45,12 +45,12 @@ exports.createProduct = async (req, res, next) => {
     }
     value.typeId = type.id;
     const product = await Product.create(value);
-    if (!req.files.productImagesMain) {
+    if (!req.files.productImageMain) {
       createError("Please attach main image", 401);
     }
-    if (req.files.productImagesMain) {
+    if (req.files.productImageMain) {
       const value2 = await cloudinary.upload(
-        req.files.productImagesMain[0].path
+        req.files.productImageMain[0].path
       );
       imageMain.image = value2;
       imageMain.priorityId = 1;
@@ -84,8 +84,11 @@ exports.createProduct = async (req, res, next) => {
   } catch (err) {
     next(err);
   } finally {
-    if (req.files.productImagesMain) {
-      fs.unlinkSync(req.files.productImagesMain[0].path);
+    if (req.files.productImageMain) {
+      fs.unlinkSync(req.files.productImageMain[0].path);
+    }
+    if (req.files.productImageSub) {
+      fs.unlinkSync(req.files.productImageSub[0].path);
     }
   }
 };
