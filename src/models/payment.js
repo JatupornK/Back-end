@@ -23,7 +23,14 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       onDelete: "restrict",
-    });
+    }),
+    Payment.hasMany(db.UserPayment, {
+      foreignKey: {
+        name: 'paymentId',
+        allowNull: false,
+      },
+      onDelete: 'restrict'
+    })
   };
 
   return Payment;

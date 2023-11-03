@@ -40,6 +40,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 0,
       },
+      stripeCustomerId: {
+        type: DataTypes.STRING(),
+        unique: true,
+        allowNull: true
+      }
     },
     {
       underscored: true,
@@ -74,7 +79,14 @@ module.exports = (sequelize, DataTypes) => {
           allowNull: false,
         },
         onDelete: "restrict",
-      });
+      }),
+      User.hasMany(db.UserPayment, {
+        foreignKey: {
+          name: 'userId',
+          allowNull: false,
+        },
+        onDelete: 'restrict',
+      })
   };
 
   return User;

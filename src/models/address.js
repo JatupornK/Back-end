@@ -2,43 +2,37 @@ module.exports = (sequelize, DataTypes) => {
   const Address = sequelize.define(
     "Address",
     {
-      houseNumber: {
-        type: DataTypes.STRING(),
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
-      },
-      province: {
-        type: DataTypes.STRING(),
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
-      },
-      district: {
+      addressTitle: {
         type: DataTypes.STRING(),
         allowNull: false,
       },
-      subDistrict: {
+      firstName: {
+        type: DataTypes.STRING(),
+        allowNull: false,
+      },
+      lastName: {
+        type: DataTypes.STRING(),
+        allowNull: false,
+      },
+      address: {
         type: DataTypes.STRING(),
         allowNull: false,
       },
       postCode: {
-        type: DataTypes.STRING(),
+        type: DataTypes.STRING(5),
         allowNull: false,
-        validate: {
-          isInt: true,
-        },
       },
-      latest: {
+      lastest: {
         type: DataTypes.BOOLEAN(),
         defaultValue: true,
       },
+      phoneNumber: {
+        type: DataTypes.STRING(10),
+        allowNull:false
+      }
     },
     {
       underscored: true,
-      timestamps: false,
     }
   );
 
