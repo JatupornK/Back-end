@@ -17,13 +17,6 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   Payment.associate = (db) => {
-    Payment.hasMany(db.Order, {
-      foreignKey: {
-        name: "paymentId",
-        allowNull: false,
-      },
-      onDelete: "restrict",
-    }),
     Payment.hasMany(db.UserPayment, {
       foreignKey: {
         name: 'paymentId',

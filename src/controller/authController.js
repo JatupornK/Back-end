@@ -100,7 +100,7 @@ exports.getProductsInCart = async (req, res, next) => {
       sizes AS s ON s.id = c.size_id
     WHERE
       c.user_id = ${req.user.id}
-    AND i.priority_id = 1 And c.status='UNDONE'
+    AND i.priority_id = 1 And c.status='UNDONE' And c.is_deleted != 1
     GROUP BY
       i.image, c.id
     order by lastUpdateCart DESC

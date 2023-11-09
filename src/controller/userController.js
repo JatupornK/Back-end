@@ -1,4 +1,9 @@
-const { CART_STATUS_UNDONE } = require("../config/constant");
+const {
+  CART_STATUS_UNDONE,
+  STATUS_WAITING,
+  STATUS_SUCCESS,
+  CART_STATUS_DONE,
+} = require("../config/constant");
 const {
   Address,
   Size,
@@ -6,13 +11,145 @@ const {
   UserPayment,
   User,
   Payment,
+  Order,
+  OrderItem,
+  Membership,
 } = require("../models");
 const createError = require("../utills/createError");
 const db = require("../models");
 const { Op } = require("sequelize");
 const { ValidateAddress } = require("../validators/createAddressValidator");
+const { currentTime, nextOneYear } = require("../utills/getDate");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
+exports.paymentSuccess = async (req, res, next) => {
+  try {
+    // console.log(req.body);
+    const [updateOrder, updateCart, sumTotalBought] = await Promise.all([
+      Order.update(
+        { paymentStatus: STATUS_SUCCESS },
+        { where: { userId: req.user.id, id: req.body.orderId } }
+      ),
+      Cart.update(
+        { status: CART_STATUS_DONE },
+        {
+          where: {
+            isDeleted: false,
+            status: CART_STATUS_UNDONE,
+            userId: req.user.id,
+          },
+        }
+      ),
+      User.update(
+        { totalBought: req.body.totalBought + req.body.sumTotalPrice },
+        { where: { id: req.user.id } }
+      ),
+    ]);
+    if (!updateOrder || !updateCart || !sumTotalBought) {
+      createError("update fail", 401);
+    }
+    if (req.body.totalBought < 10000) {
+      if (req.body.totalBought + req.body.sumTotalPrice > 10000) {
+        const isCreateMember = await Membership.update(
+          { memberTypeId: 2, startedAt: currentTime, expiredIn: nextOneYear },
+          { where: { userId: req.user.id } }
+        );
+        if (isCreateMember) {
+          const membership = await Membership.findOne({
+            where: { userId: req.user.id },
+            attributes: ["id"],
+          });
+          return res.status(201).json({Membership:membership});
+        }
+      }
+    }
+    res.status(201).json({ message: "success" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.createOrder = async (req, res, next) => {
+  try {
+    const [paymentId, cartId] = await Promise.all([
+      UserPayment.findOne({
+        where: { userId: req.user.id, stripePaymentId: req.body.paymentId },
+        attributes: ["id"],
+      }),
+      Cart.findAll({
+        where: {
+          userId: req.user.id,
+          status: CART_STATUS_UNDONE,
+          isDeleted: false,
+        },
+        attributes: ["id"],
+      }),
+    ]);
+    if (!paymentId || !cartId) {
+      createError("Create order fail", 401);
+    }
+    // console.log(cartId,paymentId);
+    const order = await Order.create({
+      paymentStatus: STATUS_WAITING,
+      orderStatus: STATUS_WAITING,
+      userPaymentId: paymentId.id,
+      userId: req.user.id,
+      addressId: req.body.addressId,
+    });
+    if (!order) {
+      createError("Create order fail", 401);
+    }
+    const orderItems = cartId.map((item) => {
+      return { orderId: order.id, cartId: item.id };
+    });
+    const result = await OrderItem.bulkCreate(orderItems);
+    if (!result) {
+      createError("Create order item fail", 401);
+    }
+    res.status(201).json({ orderId: order.id });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.updateSelectedPayment = async (req, res, next) => {
+  try {
+    console.log(req.body);
+    const [oldPayment, newPayment] = await Promise.all([
+      UserPayment.findOne({
+        where: { userId: req.user.id, lastest: true },
+      }),
+      UserPayment.findOne({
+        where: { userId: req.user.id, stripePaymentId: req.body.id },
+      }),
+    ]);
+    if (!oldPayment) {
+      createError("Update payment fail", 401);
+    }
+    const [result1, result2] = await Promise.all([
+      UserPayment.update({ lastest: true }, { where: { id: newPayment.id } }),
+      UserPayment.update({ lastest: false }, { where: { id: oldPayment.id } }),
+    ]);
+    res.status(201).json({ message: result1 });
+  } catch (err) {
+    next(err);
+  }
+};
+exports.getUpdatedTime = async (req, res, next) => {
+  try {
+    const time = await UserPayment.findAll({
+      where: { userId: req.user.id },
+      attributes: ["updatedAt", "stripePaymentId", "id"],
+      order: [["updatedAt", "DESC"]],
+    });
+    if (!time) {
+      createError("get update payment time fail", 401);
+    }
+    res.status(201).json({ time });
+  } catch (err) {
+    next(err);
+  }
+};
 exports.getLastFourNumber = async (req, res, next) => {
   try {
     const stripePaymentId = await UserPayment.findOne({
@@ -28,14 +165,26 @@ exports.getLastFourNumber = async (req, res, next) => {
         type: "card",
       }),
     ]);
-    let destructuring  = allPaymentMethods.data.map(item=> {return{brand:item.card.brand,last4:item.card.last4}})
+    console.log(allPaymentMethods);
+    let destructuring = allPaymentMethods.data.map((item) => {
+      return {
+        brand: item.card.brand,
+        last4: item.card.last4,
+        // createdAt: item.created,
+        id: item.id,
+      };
+    });
     if (!paymentMethod) {
       createError("Old payment method error", 401);
     }
     res.status(201).json({
-      last4: paymentMethod.card.last4,
-      brand: paymentMethod.card.brand,
-      allPaymentMethods: destructuring
+      lastestPayment: {
+        // createdAt: paymentMethod.created,
+        last4: paymentMethod.card.last4,
+        brand: paymentMethod.card.brand,
+        id: paymentMethod.id,
+      },
+      allPaymentMethods: destructuring,
     });
   } catch (err) {
     next(err);
@@ -67,15 +216,16 @@ exports.createStripeCustomer = async (req, res, next) => {
 };
 exports.createNewUserPayment = async (req, res, next) => {
   try {
-    if (req.body.customerId) {
-      const newPaymentMethod = await stripe.paymentMethods.attach(
-        req.body.paymentMethodId,
-        {
-          customer: req.body.customerId,
-        }
-      );
-      console.log(newPaymentMethod);
+    if (!req.body.customerId) {
+      createError("Unauthorized can not create user payment", 401);
     }
+    const newPaymentMethod = await stripe.paymentMethods.attach(
+      req.body.paymentMethodId,
+      {
+        customer: req.body.customerId,
+      }
+    );
+    console.log(newPaymentMethod);
     const oldPayment = await UserPayment.findOne({
       where: { userId: req.user.id, lastest: true },
     });
@@ -86,7 +236,6 @@ exports.createNewUserPayment = async (req, res, next) => {
       );
     }
     const payment = await Payment.findOne({ where: { payment: "ONLINE" } });
-    console.log(payment);
     const userPayment = await UserPayment.create({
       paymentId: payment.id,
       userId: req.user.id,
@@ -173,6 +322,7 @@ exports.addProductsToCart = async (req, res, next) => {
         sizeId: req.body.sizeId,
         productId: req.body.productId,
         status: CART_STATUS_UNDONE,
+        isDeleted: 0,
       },
     });
     if (isInCart) {
@@ -228,11 +378,15 @@ exports.addProductsToCart = async (req, res, next) => {
 
 exports.deleteProductFromCart = async (req, res, next) => {
   try {
-    const result = await Cart.destroy({
-      where: {
-        id: req.body.cartId,
-      },
-    });
+    console.log(req.body);
+    const result = await Cart.update(
+      { isDeleted: true },
+      {
+        where: {
+          id: req.body.cartId,
+        },
+      }
+    );
     if (!result) {
       createError("Delete item from cart fail", 401);
     }
@@ -290,8 +444,8 @@ exports.updateSelectedAddress = async (req, res, next) => {
       return res.status(202).json("Update same value");
     }
     const [updateOld, result] = await Promise.all([
-      await Address.update({ lastest: true }, { where: { id: req.body.id } }),
-      await Address.update(
+      Address.update({ lastest: true }, { where: { id: req.body.id } }),
+      Address.update(
         { lastest: false },
         { where: { id: oldLastestAddress.id } }
       ),

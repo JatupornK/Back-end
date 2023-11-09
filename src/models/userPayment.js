@@ -10,6 +10,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BOOLEAN(),
         defaultValue: true,
       },
+      isDeleted: {
+        type: DataTypes.BOOLEAN(),
+        defaultValue: false
+      }
     },
     {
       underscored: true,
@@ -23,14 +27,21 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       onDelete: "restrict",
-    }),
-      UserPayment.belongsTo(db.Payment, {
-        foreignKey: {
-          name: "paymentId",
-          allowNull: false,
-        },
-        onDelete: "restrict",
-      });
+    });
+    UserPayment.belongsTo(db.Payment, {
+      foreignKey: {
+        name: "paymentId",
+        allowNull: false,
+      },
+      onDelete: "restrict",
+    });
+    UserPayment.hasMany(db.Order, {
+      foreignKey: {
+        name: "userPaymentId",
+        allowNull: false,
+      },
+      onDelete: "restrict",
+    });
   };
 
   return UserPayment;

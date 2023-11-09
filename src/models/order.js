@@ -19,7 +19,6 @@ module.exports = (sequelize, DataTypes) => {
       orderStatus: {
         type: DataTypes.ENUM(
           STATUS_WAITING,
-          STATUS_PACKING,
           STATUS_DELIVERY,
           STATUS_CANCEL
         ),
@@ -33,20 +32,20 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   Order.associate = (db) => {
-    Order.belongsTo(db.Payment, {
+    Order.belongsTo(db.UserPayment, {
       foreignKey: {
-        name: "paymentId",
+        name: "userPaymentId",
         allowNull: false,
       },
       onDelete: "restrict",
-    }),
+    });
       Order.belongsTo(db.User, {
         foreignKey: {
           name: "userId",
           allowNull: false,
         },
         onDelete: "restrict",
-      }),
+      });
       Order.hasMany(db.OrderItem, {
         foreignKey: {
           name: "orderId",
@@ -54,6 +53,12 @@ module.exports = (sequelize, DataTypes) => {
         },
         onDelete: "restrict",
       });
+      Order.belongsTo(db.Address, {
+        foreignKey: {
+          name: 'addressId',
+          allowNull: false
+        },
+      })
   };
 
   return Order;

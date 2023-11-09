@@ -29,6 +29,10 @@ module.exports = (sequelize, DataTypes) => {
       phoneNumber: {
         type: DataTypes.STRING(10),
         allowNull:false
+      },
+      isDeleted: {
+        type: DataTypes.BOOLEAN(),
+        defaultValue: false
       }
     },
     {
@@ -43,7 +47,13 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       onDelete: "restrict",
-    });
+    }),
+    Address.hasMany(db.Order, {
+      foreignKey: {
+        name: 'addressId',
+        allowNull: false,
+      }
+    })
   };
 
   return Address;

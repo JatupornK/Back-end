@@ -1,12 +1,13 @@
 const { Strategy: JwtStrategy, ExtractJwt } = require("passport-jwt");
 const passport = require("passport");
-const { User, Address,UserPayment } = require("../models");
+const { User, Address,UserPayment,Membership } = require("../models");
 const createError = require("../utills/createError");
+const { currentTime } = require("../utills/getDate");
 const option = {
   secretOrKey: process.env.JWT_SECRET_KEY || "SECRET_KEY",
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
 };
-
+const { Op } = require("sequelize");
 const extractFunction = async (payload, done) => {
   try {
     const user = await User.findOne({
@@ -34,6 +35,16 @@ const extractFunction = async (payload, done) => {
           attributes: ["stripePaymentId"],
           required: false
         },
+        {
+          model: Membership,
+          where:{
+            expiredIn:{
+              [Op.gt]: currentTime
+            }
+          },
+          attributes: ['id'],
+          required: false
+        }
       ],
     });
     // console.log(user)

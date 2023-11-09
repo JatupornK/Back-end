@@ -17,6 +17,10 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: CART_STATUS_UNDONE,
         allowNull: false,
       },
+      isDeleted: {
+        type: DataTypes.BOOLEAN(),
+        defaultValue: false
+      }
     },
     {
       underscored: true,

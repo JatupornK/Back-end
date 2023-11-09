@@ -4,7 +4,6 @@ exports.STATUS_SUCCESS = "SUCCESS";
 exports.STATUS_FAIL = "FAIL";
 exports.STATUS_CANCEL = "CANCEL";
 exports.STATUS_DELIVERY = "DELIVERY";
-exports.STATUS_PACKING = "PACKING";
 
 // Member Type
 exports.MEMBER_NORMAL = "NORMAL";
