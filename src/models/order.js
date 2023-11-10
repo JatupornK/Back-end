@@ -2,9 +2,11 @@ const {
   STATUS_SUCCESS,
   STATUS_FAIL,
   STATUS_WAITING,
-  STATUS_PACKING,
   STATUS_DELIVERY,
   STATUS_CANCEL,
+  STATUS_PENDING,
+  STATUS_PREPARING,
+  STATUS_COMPLETE,
 } = require("../config/constant");
 
 module.exports = (sequelize, DataTypes) => {
@@ -19,8 +21,11 @@ module.exports = (sequelize, DataTypes) => {
       orderStatus: {
         type: DataTypes.ENUM(
           STATUS_WAITING,
+          STATUS_PENDING,
+          STATUS_PREPARING,
           STATUS_DELIVERY,
-          STATUS_CANCEL
+          STATUS_COMPLETE,
+          STATUS_CANCEL,
         ),
         defaultValue: "waiting",
         allowNull: false,

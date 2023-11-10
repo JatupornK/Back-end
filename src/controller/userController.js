@@ -71,6 +71,7 @@ exports.paymentSuccess = async (req, res, next) => {
 
 exports.createOrder = async (req, res, next) => {
   try {
+    console.log(req.body)
     const [paymentId, cartId] = await Promise.all([
       UserPayment.findOne({
         where: { userId: req.user.id, stripePaymentId: req.body.paymentId },
@@ -121,10 +122,15 @@ exports.updateSelectedPayment = async (req, res, next) => {
       }),
       UserPayment.findOne({
         where: { userId: req.user.id, stripePaymentId: req.body.id },
+        // where: { userId: req.user.id, id: req.body.id },
       }),
     ]);
     if (!oldPayment) {
       createError("Update payment fail", 401);
+    }
+    console.log(oldPayment)
+    if(oldPayment.stripePaymentId===req.body.id) {
+      return res.status(202).json({message:'update same payment'})
     }
     const [result1, result2] = await Promise.all([
       UserPayment.update({ lastest: true }, { where: { id: newPayment.id } }),
@@ -139,7 +145,7 @@ exports.getUpdatedTime = async (req, res, next) => {
   try {
     const time = await UserPayment.findAll({
       where: { userId: req.user.id },
-      attributes: ["updatedAt", "stripePaymentId", "id"],
+      attributes: ["updatedAt", "stripePaymentId", "id", 'lastest'],
       order: [["updatedAt", "DESC"]],
     });
     if (!time) {
@@ -155,6 +161,7 @@ exports.getLastFourNumber = async (req, res, next) => {
     const stripePaymentId = await UserPayment.findOne({
       where: { userId: req.user.id, lastest: true },
     });
+    console.log(stripePaymentId)
     if (!stripePaymentId) {
       createError("This user do not have any payment added before", 404);
     }
@@ -165,7 +172,7 @@ exports.getLastFourNumber = async (req, res, next) => {
         type: "card",
       }),
     ]);
-    console.log(allPaymentMethods);
+    // console.log(allPaymentMethods);
     let destructuring = allPaymentMethods.data.map((item) => {
       return {
         brand: item.card.brand,
@@ -179,10 +186,11 @@ exports.getLastFourNumber = async (req, res, next) => {
     }
     res.status(201).json({
       lastestPayment: {
-        // createdAt: paymentMethod.created,
+        lastest: true,
         last4: paymentMethod.card.last4,
         brand: paymentMethod.card.brand,
         id: paymentMethod.id,
+        // userPaymentId: stripePaymentId.id
       },
       allPaymentMethods: destructuring,
     });
@@ -263,7 +271,7 @@ exports.createPaymentIntent = async (req, res, next) => {
       createError("create payment intent fail", 401);
     }
     console.log(JSON.stringify(paymentIntent));
-    res.status(201).json({ paymentIntent: paymentIntent.client_secret });
+    res.status(201).json({ paymentIntentId: paymentIntent.client_secret });
   } catch (err) {
     next(err);
   }

@@ -10,6 +10,7 @@ const option = {
 const { Op } = require("sequelize");
 const extractFunction = async (payload, done) => {
   try {
+    console.log(payload)
     const user = await User.findOne({
       where: {
         id: payload.id,

@@ -1,10 +1,12 @@
 // Order and Payment status
 exports.STATUS_WAITING = "WAITING";
-exports.STATUS_SUCCESS = "SUCCESS";
-exports.STATUS_FAIL = "FAIL";
-exports.STATUS_CANCEL = "CANCEL";
+exports.STATUS_PENDING = "PENDING";
+exports.STATUS_PREPARING = "PREPARING";
 exports.STATUS_DELIVERY = "DELIVERY";
-
+exports.STATUS_COMPLETE = "COMPLETE";
+exports.STATUS_CANCEL = "CANCEL";
+exports.STATUS_FAIL = "FAIL";
+exports.STATUS_SUCCESS = "SUCCESS";
 // Member Type
 exports.MEMBER_NORMAL = "NORMAL";
 exports.MEMBER_EXCLUSIVE = "EXCLUSIVE";
