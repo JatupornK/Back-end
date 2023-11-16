@@ -10,9 +10,9 @@ const notFould = require("./middlewares/notFould");
 const error = require("./middlewares/error");
 const authRoute = require("./routes/authRoute");
 const userRoute = require("./routes/userRoute");
+const adminRoute = require('./routes/adminRoute')
 const authenticateWithPassport = require("./middlewares/passportJwt");
 const productRoute = require("./routes/productRoute");
-
 // const db = require('./models')
 // db.sequelize.sync({alter:true})
 const app = express();
@@ -29,6 +29,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 
+app.use('/admin',authenticateWithPassport, adminRoute);
 app.use("/auth", authRoute);
 app.use("/users", authenticateWithPassport, userRoute);
 app.use("/products", productRoute);

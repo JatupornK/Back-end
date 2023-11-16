@@ -23,15 +23,16 @@ exports.login = async (req, res, next) => {
     if (!isCorrect) {
       createError("email or password is invalid", 401);
     }
+    console.log(result)
     const payload = {
       id: result.id,
-      username: result.username,
-      mobile: result.mobile,
+      email: result.email,
+      role: result.role
     };
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
       expiresIn: process.env.JWT_EXPIRED_IN,
     });
-    res.status(201).json({ accessToken });
+    res.status(201).json({ accessToken, role:result.role });
   } catch (err) {
     next(err);
   }
@@ -73,7 +74,12 @@ exports.createUser = async (req, res, next) => {
 
 exports.getUserData = async (req, res, next) => {
   try {
-    res.status(201).json({ user: req.user });
+    if(req.user.role==='user'){
+     return res.status(201).json({ user: req.user });
+    }
+    if(req.user.admin.role==='admin'){
+      return res.status(201).json({user: req.user.admin})
+    }
   } catch (err) {
     next(err);
   }
@@ -102,7 +108,7 @@ exports.getProductsInCart = async (req, res, next) => {
     LEFT OUTER JOIN
       sizes AS s ON s.id = c.size_id
     WHERE
-      c.user_id = ${req.user.id}
+      c.user_id = ${req.user.id||req.user.admin.id}
     AND i.priority_id = 1 And c.status='UNDONE' And c.is_deleted != 1
     GROUP BY
       i.image, c.id

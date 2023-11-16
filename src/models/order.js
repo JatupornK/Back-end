@@ -21,15 +21,19 @@ module.exports = (sequelize, DataTypes) => {
       orderStatus: {
         type: DataTypes.ENUM(
           STATUS_WAITING,
-          STATUS_PENDING,
-          STATUS_PREPARING,
-          STATUS_DELIVERY,
-          STATUS_COMPLETE,
-          STATUS_CANCEL,
+          STATUS_PENDING, // **
+          STATUS_PREPARING, // **
+          STATUS_DELIVERY, // **
+          STATUS_COMPLETE, // **
+          STATUS_CANCEL, //
         ),
         defaultValue: "waiting",
         allowNull: false,
       },
+      orderPrice: {
+        type: DataTypes.INTEGER(),
+        allowNull: false
+      }
     },
     {
       underscored: true,

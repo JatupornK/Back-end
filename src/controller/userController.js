@@ -3,6 +3,7 @@ const {
   STATUS_WAITING,
   STATUS_SUCCESS,
   CART_STATUS_DONE,
+  STATUS_PENDING,
 } = require("../config/constant");
 const {
   Address,
@@ -25,9 +26,12 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 exports.paymentSuccess = async (req, res, next) => {
   try {
     // console.log(req.body);
+    if(req.user.admin) {
+      req.user.id = req.user.admin.id
+    }
     const [updateOrder, updateCart, sumTotalBought] = await Promise.all([
       Order.update(
-        { paymentStatus: STATUS_SUCCESS },
+        { paymentStatus: STATUS_SUCCESS, orderStatus: STATUS_PENDING },
         { where: { userId: req.user.id, id: req.body.orderId } }
       ),
       Cart.update(
@@ -72,6 +76,9 @@ exports.paymentSuccess = async (req, res, next) => {
 exports.createOrder = async (req, res, next) => {
   try {
     console.log(req.body)
+    if(req.user.admin) {
+      req.user.id = req.user.admin.id
+    }
     const [paymentId, cartId] = await Promise.all([
       UserPayment.findOne({
         where: { userId: req.user.id, stripePaymentId: req.body.paymentId },
@@ -96,6 +103,7 @@ exports.createOrder = async (req, res, next) => {
       userPaymentId: paymentId.id,
       userId: req.user.id,
       addressId: req.body.addressId,
+      orderPrice: req.body.price
     });
     if (!order) {
       createError("Create order fail", 401);
@@ -116,6 +124,9 @@ exports.createOrder = async (req, res, next) => {
 exports.updateSelectedPayment = async (req, res, next) => {
   try {
     console.log(req.body);
+    if(req.user.admin) {
+      req.user.id = req.user.admin.id
+    }
     const [oldPayment, newPayment] = await Promise.all([
       UserPayment.findOne({
         where: { userId: req.user.id, lastest: true },
@@ -143,6 +154,9 @@ exports.updateSelectedPayment = async (req, res, next) => {
 };
 exports.getUpdatedTime = async (req, res, next) => {
   try {
+    if(req.user.admin) {
+      req.user.id = req.user.admin.id
+    }
     const time = await UserPayment.findAll({
       where: { userId: req.user.id },
       attributes: ["updatedAt", "stripePaymentId", "id", 'lastest'],
@@ -158,6 +172,9 @@ exports.getUpdatedTime = async (req, res, next) => {
 };
 exports.getLastFourNumber = async (req, res, next) => {
   try {
+    if(req.user.admin) {
+      req.user.id = req.user.admin.id
+    }
     const stripePaymentId = await UserPayment.findOne({
       where: { userId: req.user.id, lastest: true },
     });
@@ -202,6 +219,9 @@ exports.getLastFourNumber = async (req, res, next) => {
 exports.createStripeCustomer = async (req, res, next) => {
   try {
     console.log(req.body);
+    if(req.user.admin) {
+      req.user.id = req.user.admin.id
+    }
     const customer = await stripe.customers.create({
       name: req.body.name,
       payment_method: req.body.paymentMethodId,
@@ -224,6 +244,9 @@ exports.createStripeCustomer = async (req, res, next) => {
 };
 exports.createNewUserPayment = async (req, res, next) => {
   try {
+    if(req.user.admin) {
+      req.user.id = req.user.admin.id
+    }
     if (!req.body.customerId) {
       createError("Unauthorized can not create user payment", 401);
     }
@@ -278,6 +301,9 @@ exports.createPaymentIntent = async (req, res, next) => {
 };
 exports.createAddress = async (req, res, next) => {
   try {
+    if(req.user.admin) {
+      req.user.id = req.user.admin.id
+    }
     ValidateAddress(req.body);
     const address = await Address.create({ ...req.body, userId: req.user.id });
     if (!address) {
@@ -311,6 +337,7 @@ exports.addProductsToCart = async (req, res, next) => {
     // *********************need to validate data if have more time
     // console.log(req.body)
     // console.log(req.body.amount,req.body.productPrice)
+    console.log(req.body)
     let sizeId;
     if (req.body.size) {
       sizeId = await Size.findOne({
@@ -323,6 +350,9 @@ exports.addProductsToCart = async (req, res, next) => {
     }
     if (!sizeId) {
       createError("Size is invalid", 401);
+    }
+    if(req.user.admin) {
+      req.user.id = req.user.admin.id
     }
     const isInCart = await Cart.findOne({
       where: {
@@ -372,7 +402,7 @@ exports.addProductsToCart = async (req, res, next) => {
     LEFT OUTER JOIN
       sizes AS s ON s.id = c.size_id
     WHERE
-      c.user_id = ${req.user.id}
+      c.user_id = ${req.user.id||req.user.admin.id}
     AND i.priority_id = 1 And c.status='UNDONE'
     GROUP BY
       i.image, c.id
@@ -445,6 +475,9 @@ exports.clickDecreaseProductInCart = async (req, res, next) => {
 
 exports.updateSelectedAddress = async (req, res, next) => {
   try {
+    if(req.user.admin) {
+      req.user.id = req.user.admin.id
+    }
     const oldLastestAddress = await Address.findOne({
       where: { lastest: true, userId: req.user.id },
     });

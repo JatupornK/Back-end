@@ -6,6 +6,7 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     console.log(file);
+    // console.log(req.admin)
     cb(
       null,
       new Date().getTime() +
