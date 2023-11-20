@@ -38,7 +38,7 @@ exports.paymentSuccess = async (req, res, next) => {
         { status: CART_STATUS_DONE },
         {
           where: {
-            isDeleted: false,
+            // isDeleted: false,
             status: CART_STATUS_UNDONE,
             userId: req.user.id,
           },
@@ -74,6 +74,7 @@ exports.paymentSuccess = async (req, res, next) => {
 };
 
 exports.createOrder = async (req, res, next) => {
+  const transaction = await db.sequelize.transaction();
   try {
     console.log(req.body)
     if(req.user.admin) {
@@ -88,7 +89,7 @@ exports.createOrder = async (req, res, next) => {
         where: {
           userId: req.user.id,
           status: CART_STATUS_UNDONE,
-          isDeleted: false,
+          // isDeleted: false,
         },
         attributes: ["id"],
       }),
@@ -111,12 +112,17 @@ exports.createOrder = async (req, res, next) => {
     const orderItems = cartId.map((item) => {
       return { orderId: order.id, cartId: item.id };
     });
+    //transaction defend error old step
     const result = await OrderItem.bulkCreate(orderItems);
     if (!result) {
       createError("Create order item fail", 401);
     }
+
+    await transaction.commit();
+
     res.status(201).json({ orderId: order.id });
   } catch (err) {
+    await transaction.rollback();
     next(err);
   }
 };
@@ -175,10 +181,10 @@ exports.getLastFourNumber = async (req, res, next) => {
     if(req.user.admin) {
       req.user.id = req.user.admin.id
     }
+    // console.log(req.user.id)
     const stripePaymentId = await UserPayment.findOne({
       where: { userId: req.user.id, lastest: true },
     });
-    console.log(stripePaymentId)
     if (!stripePaymentId) {
       createError("This user do not have any payment added before", 404);
     }
@@ -189,7 +195,7 @@ exports.getLastFourNumber = async (req, res, next) => {
         type: "card",
       }),
     ]);
-    // console.log(allPaymentMethods);
+    console.log(allPaymentMethods, paymentMethod);
     let destructuring = allPaymentMethods.data.map((item) => {
       return {
         brand: item.card.brand,
@@ -360,7 +366,7 @@ exports.addProductsToCart = async (req, res, next) => {
         sizeId: req.body.sizeId,
         productId: req.body.productId,
         status: CART_STATUS_UNDONE,
-        isDeleted: 0,
+        // isDeleted: false,
       },
     });
     if (isInCart) {
@@ -417,14 +423,15 @@ exports.addProductsToCart = async (req, res, next) => {
 exports.deleteProductFromCart = async (req, res, next) => {
   try {
     console.log(req.body);
-    const result = await Cart.update(
-      { isDeleted: true },
-      {
-        where: {
-          id: req.body.cartId,
-        },
-      }
-    );
+    const result = await Cart.destroy({where:{id:req.body.cartId}})
+    // const result = await Cart.update(
+    //   { isDeleted: true },
+    //   {
+    //     where: {
+    //       id: req.body.cartId,
+    //     },
+    //   }
+    // );
     if (!result) {
       createError("Delete item from cart fail", 401);
     }

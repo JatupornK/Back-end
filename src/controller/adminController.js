@@ -20,12 +20,32 @@ const { Op } = require("sequelize");
 const cloudinary = require("../utills/cloudinary");
 const fs = require("fs");
 const { currentTime } = require("../utills/getDate");
+
+exports.updateOrderStatus = async (req, res, next) => {
+  try {
+    if (!req.user.admin || req.user.admin.role !== "admin") {
+      createError("unauthorized", 401);
+    }
+    const newStatus = await Order.update(
+      { orderStatus: req.body.status },
+      { where: { id: req.body.id } }
+    );
+    if(!newStatus) {
+      createError('Update order status fail', 401);
+    }
+    res.status(201).json('Update order status success')
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.createProduct = async (req, res, next) => {
   try {
     if (!req.user.admin || req.user.admin.role !== "admin") {
       createError("unauthorized", 401);
     }
     req.body.size = req.body.size.split(",");
+    console.log(req.body.size)
     const value = ValidateProduct(req.body);
     let image = [];
     let imageMain = {};
@@ -130,7 +150,7 @@ exports.fetchOrder = async (req, res, next) => {
             },
             {
               model: User,
-              attributes: ["id"],
+              attributes: ["id",'firstName','lastName'],
               include: [
                 {
                   model: Membership,

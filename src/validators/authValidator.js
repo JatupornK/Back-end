@@ -44,7 +44,7 @@ const registerSchema = Joi.object({
 const loginSchema = Joi.object({
   email: Joi.string().required().messages({
     "string.empty": "email is required",
-    "any.required": "email is required", // in case don't have key username sent in req.body
+    "any.required": "email is required", 
   }),
   password: Joi.string().required().messages({
     "string.empty": "password is required",

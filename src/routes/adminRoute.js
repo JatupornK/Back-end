@@ -14,6 +14,6 @@ router.post(
   adminController.createProduct
 );
 router.get('/orders', adminController.fetchOrder)
-
+router.patch('/order/update', adminController.updateOrderStatus);
 
 module.exports = router;

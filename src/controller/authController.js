@@ -1,5 +1,5 @@
 const createError = require("../utills/createError");
-const { User, Membership, Cart, Size, Product, Image } = require("../models");
+const { User, Membership} = require("../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const db = require("../models");
@@ -7,7 +7,6 @@ const {
   validateRegister,
   validateLogin,
 } = require("../validators/authValidator");
-// const { CART_STATUS_UNDONE } = require("../config/constant");
 exports.login = async (req, res, next) => {
   try {
     const value = validateLogin(req.body);
