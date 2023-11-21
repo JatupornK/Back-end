@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
           notEmpty: true,
         },
       },
-      bestSeller: {
+      isDisabled: {
         type: DataTypes.BOOLEAN(),
         defaultValue: false,
       },

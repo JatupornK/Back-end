@@ -36,6 +36,13 @@ module.exports = (sequelize, DataTypes) => {
       },
       onDelete: "restrict",
     });
+    Type.hasMany(db.Size, {
+      foreignKey: {
+        name: 'typeId',
+        allowNull: false,
+      },
+      onDelete: 'restrict'
+    })
   };
 
   return Type;

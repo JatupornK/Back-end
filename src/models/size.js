@@ -31,7 +31,14 @@ module.exports = (sequelize, DataTypes) => {
           allowNull: false,
         },
         onDelete: "restrict",
-      });
+      }),
+      Size.belongsTo(db.Type, {
+        foreignKey: {
+          name: 'typeId',
+          allowNull: false,
+        },
+        onDelete: 'restrict'
+      })
   };
 
   return Size;

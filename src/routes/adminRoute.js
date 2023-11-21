@@ -1,5 +1,5 @@
 const express = require("express");
-const authenticateWithPassport = require("../middlewares/passportJwt");
+// const authenticateWithPassport = require("../middlewares/passportJwt");
 const uploadImage = require("../middlewares/uploadImage");
 const adminController = require('../controller/adminController')
 const router = express.Router();
@@ -15,5 +15,6 @@ router.post(
 );
 router.get('/orders', adminController.fetchOrder)
 router.patch('/order/update', adminController.updateOrderStatus);
+router.patch('/product/update', adminController.updateProductStatus);
 
 module.exports = router;

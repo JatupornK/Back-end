@@ -21,6 +21,24 @@ const cloudinary = require("../utills/cloudinary");
 const fs = require("fs");
 const { currentTime } = require("../utills/getDate");
 
+exports.updateProductStatus = async(req, res, next) => {
+  try {
+    console.log(req.body)
+    let result;
+    if(req.body.status==='Disable') {
+      result = await Product.update({isDisabled: true},{where:{id:req.body.id}})
+    }else if(req.body.status==='Enable'){
+      result = await Product.update({isDisabled: false},{where:{id:req.body.id}})
+    }
+    if(!result){
+      createError('Update product status fail', 401);
+    }
+    res.status(201).json({message: 'update success'});
+  }catch (err) {
+    next(err);
+  }
+}
+
 exports.updateOrderStatus = async (req, res, next) => {
   try {
     if (!req.user.admin || req.user.admin.role !== "admin") {
