@@ -38,10 +38,12 @@ exports.getMaxMin = async (req, res, next) => {
   try {
     const [max, min] = await Promise.all([
       Product.findOne({
+        where: { isDisabled: false },
         order: [["price", "DESC"]],
         attributes: ["price"],
       }),
       Product.findOne({
+        where: { isDisabled: false },
         order: [["price", "Asc"]],
         attributes: ["price"],
       }),
@@ -67,8 +69,8 @@ exports.getAllSize = async (req, res, next) => {
     }
     let size = [];
     for (let item of sizes) {
-      isInclude = size.includes(item.size)
-      if(!isInclude){
+      isInclude = size.includes(item.size);
+      if (!isInclude) {
         size.push(item.size);
       }
     }
