@@ -4,6 +4,7 @@ const userController = require("../controller/userController");
 const router = express.Router();
 
 router.post("/address", userController.createAddress);
+router.patch("/edit/address", userController.editAddress);
 router.post("/cart", userController.addProductsToCart);
 router.patch("/cart", userController.deleteProductFromCart);
 router.patch("/cart/increase", userController.clickIncreaseProductInCart);
@@ -15,7 +16,7 @@ router.post("/stripe/payment-intent", userController.createPaymentIntent);
 router.get("/stripe/last/payment-method", userController.getLastFourNumber);
 router.patch("/payment/update", userController.updateSelectedPayment);
 router.get("/payment/last-update", userController.getUpdatedTime);
-router.post('/create-order', userController.createOrder)
-router.patch('/payment/success', userController.paymentSuccess)
+router.post("/create-order", userController.createOrder);
+router.patch("/payment/success", userController.paymentSuccess);
 
 module.exports = router;

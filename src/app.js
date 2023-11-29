@@ -13,8 +13,7 @@ const userRoute = require("./routes/userRoute");
 const adminRoute = require('./routes/adminRoute')
 const authenticateWithPassport = require("./middlewares/passportJwt");
 const productRoute = require("./routes/productRoute");
-// const db = require('./models')
-// db.sequelize.sync({alter:true})
+
 const app = express();
 app.use(
   rateLimit({

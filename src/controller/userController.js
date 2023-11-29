@@ -195,7 +195,7 @@ exports.getLastFourNumber = async (req, res, next) => {
         type: "card",
       }),
     ]);
-    console.log(allPaymentMethods, paymentMethod);
+    // console.log(allPaymentMethods, paymentMethod);
     let destructuring = allPaymentMethods.data.map((item) => {
       return {
         brand: item.card.brand,
@@ -305,6 +305,22 @@ exports.createPaymentIntent = async (req, res, next) => {
     next(err);
   }
 };
+exports.editAddress = async(req,res,next) => {
+  try {
+    if(req.user.admin) {
+      req.user.id = req.user.admin.id
+    }
+    console.log(req.body)
+    ValidateAddress(req.body.Address);
+    const address = await Address.update({...req.body.Address},{where:{id:[req.body.id]}})
+    if(!address) {
+      createError('update address fail', 401);
+    }
+    res.status(201).json({message:'update success'})
+  } catch(err) {
+    next(err)
+  }
+}
 exports.createAddress = async (req, res, next) => {
   try {
     if(req.user.admin) {
