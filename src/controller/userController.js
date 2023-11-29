@@ -26,8 +26,8 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 exports.paymentSuccess = async (req, res, next) => {
   try {
     // console.log(req.body);
-    if(req.user.admin) {
-      req.user.id = req.user.admin.id
+    if (req.user.admin) {
+      req.user.id = req.user.admin.id;
     }
     const [updateOrder, updateCart, sumTotalBought] = await Promise.all([
       Order.update(
@@ -63,7 +63,7 @@ exports.paymentSuccess = async (req, res, next) => {
             where: { userId: req.user.id },
             attributes: ["id"],
           });
-          return res.status(201).json({Membership:membership});
+          return res.status(201).json({ Membership: membership });
         }
       }
     }
@@ -76,9 +76,9 @@ exports.paymentSuccess = async (req, res, next) => {
 exports.createOrder = async (req, res, next) => {
   const transaction = await db.sequelize.transaction();
   try {
-    console.log(req.body)
-    if(req.user.admin) {
-      req.user.id = req.user.admin.id
+    console.log(req.body);
+    if (req.user.admin) {
+      req.user.id = req.user.admin.id;
     }
     const [paymentId, cartId] = await Promise.all([
       UserPayment.findOne({
@@ -104,7 +104,7 @@ exports.createOrder = async (req, res, next) => {
       userPaymentId: paymentId.id,
       userId: req.user.id,
       addressId: req.body.addressId,
-      orderPrice: req.body.price
+      orderPrice: req.body.price,
     });
     if (!order) {
       createError("Create order fail", 401);
@@ -130,8 +130,8 @@ exports.createOrder = async (req, res, next) => {
 exports.updateSelectedPayment = async (req, res, next) => {
   try {
     console.log(req.body);
-    if(req.user.admin) {
-      req.user.id = req.user.admin.id
+    if (req.user.admin) {
+      req.user.id = req.user.admin.id;
     }
     const [oldPayment, newPayment] = await Promise.all([
       UserPayment.findOne({
@@ -145,9 +145,9 @@ exports.updateSelectedPayment = async (req, res, next) => {
     if (!oldPayment) {
       createError("Update payment fail", 401);
     }
-    console.log(oldPayment)
-    if(oldPayment.stripePaymentId===req.body.id) {
-      return res.status(202).json({message:'update same payment'})
+    console.log(oldPayment);
+    if (oldPayment.stripePaymentId === req.body.id) {
+      return res.status(202).json({ message: "update same payment" });
     }
     const [result1, result2] = await Promise.all([
       UserPayment.update({ lastest: true }, { where: { id: newPayment.id } }),
@@ -160,12 +160,12 @@ exports.updateSelectedPayment = async (req, res, next) => {
 };
 exports.getUpdatedTime = async (req, res, next) => {
   try {
-    if(req.user.admin) {
-      req.user.id = req.user.admin.id
+    if (req.user.admin) {
+      req.user.id = req.user.admin.id;
     }
     const time = await UserPayment.findAll({
       where: { userId: req.user.id },
-      attributes: ["updatedAt", "stripePaymentId", "id", 'lastest'],
+      attributes: ["updatedAt", "stripePaymentId", "id", "lastest"],
       order: [["updatedAt", "DESC"]],
     });
     if (!time) {
@@ -178,8 +178,8 @@ exports.getUpdatedTime = async (req, res, next) => {
 };
 exports.getLastFourNumber = async (req, res, next) => {
   try {
-    if(req.user.admin) {
-      req.user.id = req.user.admin.id
+    if (req.user.admin) {
+      req.user.id = req.user.admin.id;
     }
     // console.log(req.user.id)
     const stripePaymentId = await UserPayment.findOne({
@@ -225,8 +225,8 @@ exports.getLastFourNumber = async (req, res, next) => {
 exports.createStripeCustomer = async (req, res, next) => {
   try {
     console.log(req.body);
-    if(req.user.admin) {
-      req.user.id = req.user.admin.id
+    if (req.user.admin) {
+      req.user.id = req.user.admin.id;
     }
     const customer = await stripe.customers.create({
       name: req.body.name,
@@ -250,8 +250,8 @@ exports.createStripeCustomer = async (req, res, next) => {
 };
 exports.createNewUserPayment = async (req, res, next) => {
   try {
-    if(req.user.admin) {
-      req.user.id = req.user.admin.id
+    if (req.user.admin) {
+      req.user.id = req.user.admin.id;
     }
     if (!req.body.customerId) {
       createError("Unauthorized can not create user payment", 401);
@@ -305,26 +305,76 @@ exports.createPaymentIntent = async (req, res, next) => {
     next(err);
   }
 };
-exports.editAddress = async(req,res,next) => {
+exports.deleteAddress = async (req, res, next) => {
   try {
-    if(req.user.admin) {
-      req.user.id = req.user.admin.id
+    if (req.user.admin) {
+      req.user.id = req.user.admin.id;
     }
-    console.log(req.body)
-    ValidateAddress(req.body.Address);
-    const address = await Address.update({...req.body.Address},{where:{id:[req.body.id]}})
-    if(!address) {
-      createError('update address fail', 401);
+    console.log(req.body);
+    const isLastest = await Address.findOne({
+      where: { id: req.body.id, lastest: true },
+    });
+    if (isLastest) {
+      let newLastest,isDeleted,lastest;
+      if(!req.body.isLastOne){
+        newLastest = await Address.findOne({
+          where: { lastest: false, isDeleted: false },
+          order: [["updatedAt", "DESC"]],
+        });
+        [ isDeleted, lastest ] = await Promise.all([
+          Address.update({ isDeleted: true, lastest:false }, { where: { id: req.body.id } }),
+          Address.update({ lastest: true }, { where: { id: newLastest.id } }),
+        ]);
+        if (!isDeleted) {
+          createError("delete address fail", 401);
+        }
+        if (!lastest) {
+          createError("can not update new lastest", 401);
+        }
+        return res.status(201).json({id: newLastest.id});
+      }else {
+        isDeleted = await Address.update({isDeleted:true, lastest:false},{where:{id:req.body.id}})
+        if(!isDeleted){
+          createError('delete address fail', 401);
+        }
+        return res.status(201).json({message:'delete success'});
+      }
     }
-    res.status(201).json({message:'update success'})
-  } catch(err) {
-    next(err)
+    const isDeleted = await Address.update(
+      { isDeleted: true },
+      { where: { id: req.body.id } }
+    );
+    if (!isDeleted) {
+      createError("delete address fail", 401);
+    }
+    res.status(201).json({ message: "delete success" });
+  } catch (err) {
+    next(err);
   }
-}
+};
+exports.editAddress = async (req, res, next) => {
+  try {
+    if (req.user.admin) {
+      req.user.id = req.user.admin.id;
+    }
+    console.log(req.body);
+    ValidateAddress(req.body.Address);
+    const address = await Address.update(
+      { ...req.body.Address },
+      { where: { id: [req.body.id] } }
+    );
+    if (!address) {
+      createError("update address fail", 401);
+    }
+    res.status(201).json({ message: "update success" });
+  } catch (err) {
+    next(err);
+  }
+};
 exports.createAddress = async (req, res, next) => {
   try {
-    if(req.user.admin) {
-      req.user.id = req.user.admin.id
+    if (req.user.admin) {
+      req.user.id = req.user.admin.id;
     }
     ValidateAddress(req.body);
     const address = await Address.create({ ...req.body, userId: req.user.id });
@@ -359,7 +409,7 @@ exports.addProductsToCart = async (req, res, next) => {
     // *********************need to validate data if have more time
     // console.log(req.body)
     // console.log(req.body.amount,req.body.productPrice)
-    console.log(req.body)
+    console.log(req.body);
     let sizeId;
     if (req.body.size) {
       sizeId = await Size.findOne({
@@ -373,8 +423,8 @@ exports.addProductsToCart = async (req, res, next) => {
     if (!sizeId) {
       createError("Size is invalid", 401);
     }
-    if(req.user.admin) {
-      req.user.id = req.user.admin.id
+    if (req.user.admin) {
+      req.user.id = req.user.admin.id;
     }
     const isInCart = await Cart.findOne({
       where: {
@@ -424,7 +474,7 @@ exports.addProductsToCart = async (req, res, next) => {
     LEFT OUTER JOIN
       sizes AS s ON s.id = c.size_id
     WHERE
-      c.user_id = ${req.user.id||req.user.admin.id}
+      c.user_id = ${req.user.id || req.user.admin.id}
     AND i.priority_id = 1 And c.status='UNDONE'
     GROUP BY
       i.image, c.id
@@ -439,7 +489,7 @@ exports.addProductsToCart = async (req, res, next) => {
 exports.deleteProductFromCart = async (req, res, next) => {
   try {
     console.log(req.body);
-    const result = await Cart.destroy({where:{id:req.body.cartId}})
+    const result = await Cart.destroy({ where: { id: req.body.cartId } });
     // const result = await Cart.update(
     //   { isDeleted: true },
     //   {
@@ -498,8 +548,8 @@ exports.clickDecreaseProductInCart = async (req, res, next) => {
 
 exports.updateSelectedAddress = async (req, res, next) => {
   try {
-    if(req.user.admin) {
-      req.user.id = req.user.admin.id
+    if (req.user.admin) {
+      req.user.id = req.user.admin.id;
     }
     const oldLastestAddress = await Address.findOne({
       where: { lastest: true, userId: req.user.id },

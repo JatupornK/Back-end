@@ -21,6 +21,9 @@ const extractFunction = async (payload, done) => {
         include: [
           {
             model: Address,
+            where:{
+              isDeleted: false,
+            },
             attributes: {
               exclude: ["userId"],
             },
@@ -61,6 +64,9 @@ const extractFunction = async (payload, done) => {
         include: [
           {
             model: Address,
+            where:{
+              isDeleted: false,
+            },
             attributes: {
               exclude: ["userId"],
             },

@@ -5,6 +5,7 @@ const router = express.Router();
 
 router.post("/address", userController.createAddress);
 router.patch("/edit/address", userController.editAddress);
+router.patch('/delete/address', userController.deleteAddress);
 router.post("/cart", userController.addProductsToCart);
 router.patch("/cart", userController.deleteProductFromCart);
 router.patch("/cart/increase", userController.clickIncreaseProductInCart);
